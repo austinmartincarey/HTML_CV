@@ -5,23 +5,42 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
+<!-- Where the visitor count will be shown -->
+<div id="visitor-count" style="text-align:center; margin-top: 40px; font-size: 18px;">
+  Loading visitor count...
+</div>
+
 <script>
   // Replace this with your actual Firebase config
   const firebaseConfig = {
-      apiKey: "AIzaSyDhFWUAmQP3sP4_4F9yiykTuwWx-kJIIXk",
-      authDomain: "visitorcounter-65299.firebaseapp.com",
-      projectId: "visitorcounter-65299",
-      storageBucket: "visitorcounter-65299.firebasestorage.app",
-      messagingSenderId: "570550963395",
-      appId: "1:570550963395:web:2dbf0357b8db24ee742676",
-      measurementId: "G-WV3RMSTW1F"
+    apiKey: "AIzaSyDhFWUAmQP3sP4_4F9yiykTuwWx-kJIIXk",
+    authDomain: "visitorcounter-65299.firebaseapp.com",
+    projectId: "visitorcounter-65299",
+    storageBucket: "visitorcounter-65299.firebasestorage.app",
+    messagingSenderId: "570550963395",
+    appId: "1:570550963395:web:2dbf0357b8db24ee742676",
+    measurementId: "G-WV3RMSTW1F"
   };
 
   // Initialize Firebase
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // Get IP address to determine uniqueness (via third-party API)
+  // Function to update the visitor count display
+  async function updateVisitorCount() {
+    try {
+      const snapshot = await db.collection("visitors").get();
+      const count = snapshot.size;
+      document.getElementById("visitor-count").textContent =
+        `Unique visitors: ${count}`;
+    } catch (error) {
+      console.error("Error fetching visitor count:", error);
+      document.getElementById("visitor-count").textContent =
+        "Could not load visitor count.";
+    }
+  }
+
+  // Get IP address to determine uniqueness
   fetch('https://api.ipify.org?format=json')
     .then(response => response.json())
     .then(async data => {
@@ -30,19 +49,21 @@
 
       const doc = await docRef.get();
       if (!doc.exists) {
-        // First time visitor from this IP
+        // New visitor
         await docRef.set({
           ip: ip,
           timestamp: new Date()
         });
-        console.log("New unique visitor recorded:", ip);
-      } else {
-        console.log("Returning visitor:", ip);
       }
+      updateVisitorCount(); // Show updated count
     })
-    .catch(err => console.error("IP fetch error:", err));
+    .catch(err => {
+      console.error("IP fetch error:", err);
+      document.getElementById("visitor-count").textContent =
+        "Could not determine visitor identity.";
+    });
 </script>
-    
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -444,4 +465,5 @@ In addition to my professional experience, I serve my country part time as a mil
 
 </body>
 </html>
+
 
